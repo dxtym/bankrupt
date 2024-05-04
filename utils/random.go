@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz"
+const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-// Generate random number (min, max)
+// generate random number (min, max)
 func RandomInt(min, max int64) int64 {
 	return min + rand.Int63n(max - min + 1)
 }
 
-// Generate random string (n)
+// generate random string (n)
 func RandomString(n int) string {
 	var sb strings.Builder
 	k := len(alphabet)
@@ -25,17 +25,17 @@ func RandomString(n int) string {
 	return sb.String()
 }
 
-// Generate random owner
+// generate random owner
 func RandomOwner() string {
 	return RandomString(8)
 }
 
-// Generate random money
+// generate random money
 func RandomMoney() int64 {
 	return RandomInt(0, 1000)
 }
 
-// Generate random currency
+// generate random currency
 func RandomCurrency() string {
 	currencies := []string{"EUR", "USD", "CAD"}
 	n := len(currencies)
