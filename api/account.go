@@ -20,7 +20,7 @@ func (s *Server) createAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	
+
 	arg := db.CreateAccountParams{
 		Owner:    req.Owner,
 		Balance:  0,
@@ -31,10 +31,10 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
-				case "foreign_key_violation", "invalid_foreign_key":
-					ctx.JSON(http.StatusForbidden, errorResponse(err))
-					return
-				}
+			case "foreign_key_violation", "invalid_foreign_key":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -69,7 +69,7 @@ func (s *Server) getAccount(ctx *gin.Context) {
 }
 
 type listAccountRequest struct {
-	PageId int32 `form:"page_id" binding:"required,min=1"`
+	PageId   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
@@ -81,7 +81,7 @@ func (s *Server) listAccount(ctx *gin.Context) {
 	}
 
 	arg := db.ListAccountsParams{
-		Limit: req.PageSize,
+		Limit:  req.PageSize,
 		Offset: (req.PageId - 1) * req.PageSize,
 	}
 

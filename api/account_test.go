@@ -21,14 +21,14 @@ import (
 func TestGetAccountAPI(t *testing.T) {
 	account := randomAccount()
 
-	testCases := []struct{
-		name string
-		accountId int64
-		buildStubs func(s *mockdb.MockStore)
+	testCases := []struct {
+		name          string
+		accountId     int64
+		buildStubs    func(s *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "OK",
+			name:      "OK",
 			accountId: account.ID,
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -42,7 +42,7 @@ func TestGetAccountAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "NotFound",
+			name:      "NotFound",
 			accountId: account.ID,
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -55,7 +55,7 @@ func TestGetAccountAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "InternalError",
+			name:      "InternalError",
 			accountId: account.ID,
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -68,7 +68,7 @@ func TestGetAccountAPI(t *testing.T) {
 			},
 		},
 		{
-			name: "InvalidId",
+			name:      "InvalidId",
 			accountId: 0,
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -108,23 +108,23 @@ func TestGetAccountAPI(t *testing.T) {
 func TestCreateAccountAPI(t *testing.T) {
 	account := randomAccount()
 
-	testCases := []struct{
-		name string
-		body gin.H
-		buildStubs func(s *mockdb.MockStore)
-		checkResponse func(t * testing.T, recorder *httptest.ResponseRecorder)
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(s *mockdb.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			body: gin.H{
-				"owner": account.Owner,
+				"owner":    account.Owner,
 				"currency": account.Currency,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				arg := db.CreateAccountParams{
-					Owner: account.Owner,
+					Owner:    account.Owner,
 					Currency: account.Currency,
-					Balance: 0,
+					Balance:  0,
 				}
 				s.EXPECT().
 					CreateAccount(gomock.Any(), gomock.Eq(arg)).
@@ -138,7 +138,7 @@ func TestCreateAccountAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"owner": account.Owner,
+				"owner":    account.Owner,
 				"currency": account.Currency,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
@@ -154,7 +154,7 @@ func TestCreateAccountAPI(t *testing.T) {
 		{
 			name: "InvalidCurrency",
 			body: gin.H{
-				"owner": account.Owner,
+				"owner":    account.Owner,
 				"currency": "XYZ",
 			},
 			buildStubs: func(s *mockdb.MockStore) {
@@ -179,7 +179,7 @@ func TestCreateAccountAPI(t *testing.T) {
 			server := NewServer(store)
 			recorder := httptest.NewRecorder()
 
-			// for body 
+			// for body
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
@@ -194,32 +194,32 @@ func TestCreateAccountAPI(t *testing.T) {
 }
 
 func TestListAccountsAPI(t *testing.T) {
-	n  := 5
+	n := 5
 	accounts := make([]db.Account, n)
 	for i := 0; i < n; i++ {
 		accounts[i] = randomAccount()
 	}
 
 	type Query struct {
-		pageId int
+		pageId     int
 		pageOffset int
 	}
 
-	testCases := []struct{
-		name string
-		query Query
-		buildStubs func(s *mockdb.MockStore)
+	testCases := []struct {
+		name          string
+		query         Query
+		buildStubs    func(s *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			query: Query{
-				pageId: 1,
+				pageId:     1,
 				pageOffset: n,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				arg := db.ListAccountsParams{
-					Limit: int32(n),
+					Limit:  int32(n),
 					Offset: 0,
 				}
 				s.EXPECT().
@@ -235,12 +235,12 @@ func TestListAccountsAPI(t *testing.T) {
 		{
 			name: "NotFound",
 			query: Query{
-				pageId: 1,
+				pageId:     1,
 				pageOffset: n,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				arg := db.ListAccountsParams{
-					Limit: int32(n),
+					Limit:  int32(n),
 					Offset: 0,
 				}
 				s.EXPECT().
@@ -255,7 +255,7 @@ func TestListAccountsAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			query: Query{
-				pageId: 1,
+				pageId:     1,
 				pageOffset: n,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
@@ -271,13 +271,13 @@ func TestListAccountsAPI(t *testing.T) {
 		{
 			name: "InvalidPageId",
 			query: Query{
-				pageId: -1,
+				pageId:     -1,
 				pageOffset: n,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
 					ListAccounts(gomock.Any(), gomock.Any()).
-					Times(0)	
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -286,13 +286,13 @@ func TestListAccountsAPI(t *testing.T) {
 		{
 			name: "InvalidPageSize",
 			query: Query{
-				pageId: 1,
-				pageOffset: 1<<18,
+				pageId:     1,
+				pageOffset: 1 << 18,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
 					ListAccounts(gomock.Any(), gomock.Any()).
-					Times(0)	
+					Times(0)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -330,9 +330,9 @@ func TestListAccountsAPI(t *testing.T) {
 
 func randomAccount() db.Account {
 	return db.Account{
-		ID: utils.RandomInt(1, 1000),
-		Owner: utils.RandomOwner(),
-		Balance: utils.RandomMoney(),
+		ID:       utils.RandomInt(1, 1000),
+		Owner:    utils.RandomOwner(),
+		Balance:  utils.RandomMoney(),
 		Currency: utils.RandomCurrency(),
 	}
 }

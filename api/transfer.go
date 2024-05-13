@@ -20,17 +20,17 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 	var req createTransferRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return 
+		return
 	}
 
 	arg := db.TransferTxParams{
 		FromAccountId: req.FromAccountId,
-		ToAccountId: req.ToAccountId,
-		Amount: req.Amount,
+		ToAccountId:   req.ToAccountId,
+		Amount:        req.Amount,
 	}
 
-	if (!s.validateCurrency(ctx, arg.FromAccountId, req.Currency) ||
-		!s.validateCurrency(ctx, arg.ToAccountId, req.Currency)) {
+	if !s.validateCurrency(ctx, arg.FromAccountId, req.Currency) ||
+		!s.validateCurrency(ctx, arg.ToAccountId, req.Currency) {
 		return
 	}
 

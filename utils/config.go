@@ -5,8 +5,8 @@ import (
 )
 
 type Config struct {
-	Driver string `mapstructure:"DRIVER"`
-	Source string `mapstructure:"SOURCE"`
+	Driver  string `mapstructure:"DRIVER"`
+	Source  string `mapstructure:"SOURCE"`
 	Address string `mapstructure:"ADDRESS"`
 }
 

@@ -20,7 +20,7 @@ import (
 
 // custom matcher for password and arg
 type eqCreateUserParamsMatcher struct {
-	arg db.CreateUserParams
+	arg      db.CreateUserParams
 	password string
 }
 
@@ -29,7 +29,7 @@ func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
 	if !ok {
 		return false
 	}
-	
+
 	// check user password with hashed password
 	err := utils.CheckPassword(e.password, arg.HashedPassword)
 	if err != nil {
@@ -52,25 +52,25 @@ func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher
 func TestCreateUserAPI(t *testing.T) {
 	user, password := randomUser(t)
 
-	testCases := []struct{
-		name string
-		body gin.H
-		buildStubs func(s *mockdb.MockStore)
+	testCases := []struct {
+		name          string
+		body          gin.H
+		buildStubs    func(s *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
 			name: "OK",
 			body: gin.H{
-				"username": user.Username,
-				"password": password,
+				"username":  user.Username,
+				"password":  password,
 				"full_name": user.FullName,
-				"email": user.Email,
+				"email":     user.Email,
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				arg := db.CreateUserParams{
 					Username: user.Username,
 					FullName: user.FullName,
-					Email: user.Email,
+					Email:    user.Email,
 				}
 				s.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParams(arg, password)).
@@ -115,10 +115,10 @@ func randomUser(t *testing.T) (user db.User, password string) {
 	require.NoError(t, err)
 
 	user = db.User{
-		Username: utils.RandomOwner(),
+		Username:       utils.RandomOwner(),
 		HashedPassword: hashedPassword,
-		FullName: utils.RandomOwner(),
-		Email: utils.RandomEmail(),
+		FullName:       utils.RandomOwner(),
+		Email:          utils.RandomEmail(),
 	}
 	return
 }

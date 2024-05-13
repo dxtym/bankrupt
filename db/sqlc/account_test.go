@@ -13,8 +13,8 @@ import (
 func createRandomAccount(t *testing.T) Account {
 	user := createRandomUser(t)
 	arg := CreateAccountParams{
-		Owner: user.Username,
-		Balance: utils.RandomMoney(),
+		Owner:    user.Username,
+		Balance:  utils.RandomMoney(),
 		Currency: utils.RandomCurrency(),
 	}
 	account, err := testQueries.CreateAccount(context.Background(), arg)
@@ -54,7 +54,7 @@ func TestGetAccount(t *testing.T) {
 func TestUpdateAccount(t *testing.T) {
 	account := createRandomAccount(t)
 	arg := UpdateAccountParams{
-		ID: account.ID,
+		ID:      account.ID,
 		Balance: utils.RandomMoney(),
 	}
 
@@ -82,7 +82,7 @@ func TestListAccount(t *testing.T) {
 		createRandomAccount(t)
 	}
 	arg := ListAccountsParams{
-		Limit: 5,
+		Limit:  5,
 		Offset: 5,
 	}
 	accounts, err := testQueries.ListAccounts(context.Background(), arg)
