@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	mockdb "github.com/dxtym/bankrupt/db/mock"
 	db "github.com/dxtym/bankrupt/db/sqlc"
+	"github.com/dxtym/bankrupt/token"
 	"github.com/dxtym/bankrupt/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -19,9 +21,13 @@ import (
 func TestCreateTransferAPI(t *testing.T) {
 	amount := int64(10)
 
-	account1 := randomAccount()
-	account2 := randomAccount()
-	account3 := randomAccount()
+	user1, _ := randomUser(t)
+	user2, _ := randomUser(t)
+	user3, _ := randomUser(t)
+
+	account1 := randomAccount(user1.Username)
+	account2 := randomAccount(user2.Username)
+	account3 := randomAccount(user3.Username)
 
 	account1.Currency = utils.USD
 	account2.Currency = utils.USD
@@ -30,6 +36,7 @@ func TestCreateTransferAPI(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
+		setupAuth func(t *testing.T, request *http.Request, tokenMaker token.Maker)
 		buildStubs    func(s *mockdb.MockStore)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
@@ -40,6 +47,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"to_account_id":   account2.ID,
 				"amount":          amount,
 				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -62,12 +72,40 @@ func TestCreateTransferAPI(t *testing.T) {
 			},
 		},
 		{
+			name: "UnAuthorized",
+			body: gin.H{
+				"from_account_id": account1.ID,
+				"to_account_id":   account2.ID,
+				"amount":          amount,
+				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, "unauthorized_user", time.Minute)
+			},
+			buildStubs: func(s *mockdb.MockStore) {
+				s.EXPECT().
+					GetAccount(gomock.Any(), gomock.Eq(account1.ID)).
+					Times(1).Return(account1, nil)
+				s.EXPECT().
+					GetAccount(gomock.Any(), gomock.Eq(account2.ID)).
+					Times(0)
+				s.EXPECT().
+					TransferTx(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name: "FromAccountNotFound",
 			body: gin.H{
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          amount,
 				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -89,6 +127,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"to_account_id":   account2.ID,
 				"amount":          amount,
 				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -112,6 +153,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"amount":          amount,
 				"currency":        utils.USD,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
+			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account3.ID)).
@@ -132,6 +176,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"to_account_id":   account3.ID,
 				"amount":          amount,
 				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -155,6 +202,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"amount":          amount,
 				"currency":        "XYZ",
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
+			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
 					GetAccount(gomock.Any(), gomock.Any()).Times(0)
@@ -172,6 +222,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"to_account_id":   account2.ID,
 				"amount":          amount,
 				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -191,6 +244,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"amount":          -amount,
 				"currency":        utils.USD,
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
+			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
 					GetAccount(gomock.Any(), gomock.Any()).Times(0)
@@ -208,6 +264,9 @@ func TestCreateTransferAPI(t *testing.T) {
 				"to_account_id":   account2.ID,
 				"amount":          amount,
 				"currency":        utils.USD,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationType, account1.Owner, time.Minute)
 			},
 			buildStubs: func(s *mockdb.MockStore) {
 				s.EXPECT().
@@ -245,6 +304,7 @@ func TestCreateTransferAPI(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request, server.token)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
