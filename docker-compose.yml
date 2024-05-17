@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=bankrupt
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "6969:6969"
+    depends_on:
+      - postgres
+    environment:
+      - SOURCE=postgresql://root:secret@postgres:5432/bankrupt?sslmode=disable
+    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh" ]
+    command: [ "/app/main" ]
