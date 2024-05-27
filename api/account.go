@@ -21,7 +21,7 @@ func (s *Server) createAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	
+
 	// add auth payload (not from request)
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.CreateAccountParams{
@@ -75,7 +75,6 @@ func (s *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
-
 	ctx.JSON(http.StatusOK, account)
 }
 
@@ -93,7 +92,7 @@ func (s *Server) listAccount(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	arg := db.ListAccountsParams{
-		Owner: authPayload.Username,
+		Owner:  authPayload.Username,
 		Limit:  req.PageSize,
 		Offset: (req.PageId - 1) * req.PageSize,
 	}
