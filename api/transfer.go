@@ -34,8 +34,8 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 	fromAccount, valid := s.validateCurrency(ctx, arg.FromAccountId, req.Currency)
 	if !valid {
 		return
-	} 
-	
+	}
+
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	if authPayload.Username != fromAccount.Owner {
 		err := errors.New("account has limited privileges")
@@ -43,7 +43,7 @@ func (s *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if _, valid	= s.validateCurrency(ctx, arg.ToAccountId, req.Currency); !valid {
+	if _, valid = s.validateCurrency(ctx, arg.ToAccountId, req.Currency); !valid {
 		return
 	}
 

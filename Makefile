@@ -13,11 +13,17 @@ migrateup:
 migrateup1:
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/bankrupt?sslmode=disable" -verbose up 1
 
+migrateup2:
+	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/bankrupt?sslmode=disable" -verbose up 2
+
 migratedown:
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/bankrupt?sslmode=disable" -verbose down
 
 migratedown1:
 	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/bankrupt?sslmode=disable" -verbose down 1
+
+migratedown2:
+	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/bankrupt?sslmode=disable" -verbose down 2
 
 sqlc:
 	sqlc generate

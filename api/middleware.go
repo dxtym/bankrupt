@@ -1,8 +1,8 @@
 package api
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	authorizationHeaderKey = "authorization"
-	authorizationType = "bearer"
+	authorizationHeaderKey  = "authorization"
+	authorizationType       = "bearer"
 	authorizationPayloadKey = "authorization_key"
 )
 
