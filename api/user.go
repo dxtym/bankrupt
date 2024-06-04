@@ -75,7 +75,7 @@ func (s *Server) CreateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-type LoginUserRequst struct {
+type LoginUserRequest struct {
 	Username string `json:"username" binding:"required,alphanum"`
 	Password string `json:"password" binding:"required,min=6"`
 }
@@ -90,7 +90,7 @@ type LoginUserResponse struct {
 }
 
 func (s *Server) LoginUser(ctx *gin.Context) {
-	var req LoginUserRequst
+	var req LoginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
