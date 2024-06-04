@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+
+import "create_user.proto";
+import "login_user.proto";
+
+option go_package = "github.com/dxtym/bankrupt/pb";
+
+service Bankrupt {
+    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
+    rpc LoginUser (LoginUserRequest) returns (LoginUserResponse) {}
+}
