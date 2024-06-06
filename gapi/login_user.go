@@ -37,13 +37,16 @@ func (s *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.L
 		return nil, status.Errorf(codes.Internal, "cannot create refresh token: %v", err)
 	}
 
+	// TODO: Not showing database version of metadata
+	meta := s.GetMetadata(ctx)
+
 	session, err := s.store.CreateSession(ctx, db.CreateSessionParams{
 		ID:           refreshPayload.Id,
 		Username:     user.Username,
 		RefreshToken: refreshToken,
+		UserAgent:    meta.userAgent,
+		ClientIp:     meta.clientIP,
 		IsBlocked:    false,
-		UserAgent:    "",
-		ClientIp:     "",
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	})
 	if err != nil {
