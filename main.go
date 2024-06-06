@@ -1,18 +1,22 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net"
+	"net/http"
 
 	"github.com/dxtym/bankrupt/api"
 	db "github.com/dxtym/bankrupt/db/sqlc"
 	"github.com/dxtym/bankrupt/gapi"
 	"github.com/dxtym/bankrupt/pb"
 	"github.com/dxtym/bankrupt/utils"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func main() {
@@ -27,7 +31,8 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	runGRPCServer(config, store)
+	go runGRPCServer(config, store)
+	runGatewayServer(config, store)
 }
 
 func runGRPCServer(config utils.Config, store db.Store) {
@@ -48,6 +53,43 @@ func runGRPCServer(config utils.Config, store db.Store) {
 
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatal("cannot start server", err)
+	}
+}
+
+func runGatewayServer(config utils.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
+
+	grpcMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	}))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = pb.RegisterBankruptHandlerServer(ctx, grpcMux, server)
+	if err != nil {
+		log.Fatal("cannot register service:", err)
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", grpcMux)
+
+	log.Printf("starting HTTP gateway server on %s", config.HTTPAddress)
+	listener, err := net.Listen("tcp", config.HTTPAddress)
+	if err != nil {
+		log.Fatal("cannot listen to address:", err)
+	}
+
+	if err := http.Serve(listener, mux); err != nil {
+		log.Fatal("cannot start HTTP gateway server", err)
 	}
 }
 
