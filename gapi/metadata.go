@@ -3,7 +3,6 @@ package gapi
 import (
 	"context"
 
-	"github.com/labstack/gommon/log"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
@@ -23,8 +22,6 @@ func (s *Server) GetMetadata(ctx context.Context) *Metadata {
 	meta := &Metadata{}
 
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		log.Printf("metadata: %+v\n", md)
-
 		if userAgents := md.Get(grpcUserAgentHeader); len(userAgents) > 0 {
 			meta.userAgent = userAgents[0]
 		}
