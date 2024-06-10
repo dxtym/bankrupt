@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Driver            string        `mapstructure:"DRIVER"`
 	Source            string        `mapstructure:"SOURCE"`
+	MigrateURL        string        `mapstructure:"MIGRATE_URL"`
 	HTTPAddress       string        `mapstructure:"HTTP_ADDRESS"`
 	GRPCAddress       string        `mapstructure:"GRPC_ADDRESS"`
 	TokenSymmetricKey string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`

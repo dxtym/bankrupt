@@ -9,11 +9,16 @@ import (
 
 	"github.com/dxtym/bankrupt/api"
 	db "github.com/dxtym/bankrupt/db/sqlc"
+	_ "github.com/dxtym/bankrupt/doc/statik"
 	"github.com/dxtym/bankrupt/gapi"
 	"github.com/dxtym/bankrupt/pb"
 	"github.com/dxtym/bankrupt/utils"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/lib/pq"
+	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -30,9 +35,23 @@ func main() {
 		log.Fatal("cannot connect to db:", err)
 	}
 
+	runDbMigration(config.MigrateURL, config.Source)
+
 	store := db.NewStore(conn)
 	go runGRPCServer(config, store)
 	runGatewayServer(config, store)
+}
+
+func runDbMigration(migrateURL, source string) {
+	m, err := migrate.New(migrateURL, source)
+	if err != nil {
+		log.Fatal("cannot create migration instance:", err)
+	}
+	if err := m.Up(); err != nil {
+		log.Fatal("failed to migrate up:", err)
+	}
+
+	log.Println("db migrated succesfully")
 }
 
 func runGRPCServer(config utils.Config, store db.Store) {
@@ -81,6 +100,16 @@ func runGatewayServer(config utils.Config, store db.Store) {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
+
+	// fs := http.FileServer(http.Dir("./doc/swagger"))
+	// serve from server memory
+	statikFs, err := fs.New()
+	if err != nil {
+		log.Fatal("cannot create file system:", err)
+	}
+
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFs))
+	mux.Handle("/swagger/", swaggerHandler)
 
 	log.Printf("starting HTTP gateway server on %s", config.HTTPAddress)
 	listener, err := net.Listen("tcp", config.HTTPAddress)
