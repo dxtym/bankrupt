@@ -38,8 +38,8 @@ service Bankrupt {
           body: "*"
         };
         option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-          description: "Endpoint to login user and get access & refersh tokens";
-          summary: "Login user and get tokens";"
+          description: "Endpoint to login and get access & refersh tokens";
+          summary: "Login user and get tokens";
         };
     }
 }
