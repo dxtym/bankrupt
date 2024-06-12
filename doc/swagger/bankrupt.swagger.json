@@ -58,7 +58,7 @@
     "/v1/login_user": {
       "post": {
         "summary": "Login user and get tokens",
-        "description": "Endpoint to login user and get access \u0026 refersh tokens",
+        "description": "Endpoint to login and get access \u0026 refersh tokens",
         "operationId": "Bankrupt_LoginUser",
         "responses": {
           "200": {
