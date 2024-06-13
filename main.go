@@ -47,7 +47,7 @@ func runDbMigration(migrateURL, source string) {
 	if err != nil {
 		log.Fatal("cannot create migration instance:", err)
 	}
-	if err := m.Up(); err != nil {
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatal("failed to migrate up:", err)
 	}
 
