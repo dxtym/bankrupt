@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	Environment       string        `mapstructure:"ENVIRONMENT"`
 	Driver            string        `mapstructure:"DRIVER"`
 	Source            string        `mapstructure:"SOURCE"`
 	MigrateURL        string        `mapstructure:"MIGRATE_URL"`
