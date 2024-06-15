@@ -19,7 +19,6 @@ func (s *Server) authorizeUser(ctx context.Context) (*token.Payload, error) {
 	if !ok {
 		return nil, fmt.Errorf("metadata is not provided")
 	}
-
 	authValues := md.Get(authHeader)
 	if len(authValues) == 0 {
 		return nil, fmt.Errorf("authorization token is not provided")
