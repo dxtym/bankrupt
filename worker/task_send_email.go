@@ -16,6 +16,7 @@ type PayloadSendEmail struct {
 	Username string `json:"username"`
 }
 
+// task distributor
 func (rtd RedisTaskDistributor) DistributorTaskSendEmail(
 	ctx context.Context,
 	payload PayloadSendEmail,
@@ -26,9 +27,9 @@ func (rtd RedisTaskDistributor) DistributorTaskSendEmail(
 		return fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	task := asynq.NewTask(TaskSendEmail, jsonPayload, opts...)
+	task := asynq.NewTask(TaskSendEmail, jsonPayload, opts...) // create a new task
 
-	info, err := rtd.client.EnqueueContext(ctx, task)
+	info, err := rtd.client.EnqueueContext(ctx, task) // enqueue the task
 	if err != nil {
 		return fmt.Errorf("failed to enqueue task: %w", err)
 	}
@@ -38,13 +39,14 @@ func (rtd RedisTaskDistributor) DistributorTaskSendEmail(
 	return nil
 }
 
+// task processor
 func (rtp RedisTaskProcessor) ProcessorTaskSendEmail(ctx context.Context, task *asynq.Task) error {
 	var payload PayloadSendEmail
 	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payload: %w", asynq.SkipRetry)
 	}
 
-	user, err := rtp.store.GetUser(ctx, payload.Username)
+	user, err := rtp.store.GetUser(ctx, payload.Username) // get user from db
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("user not found: %w", asynq.SkipRetry)
@@ -53,6 +55,6 @@ func (rtp RedisTaskProcessor) ProcessorTaskSendEmail(ctx context.Context, task *
 	}
 
 	// todo: send email to user
-	log.Info().Str("username", user.Username).Str("email", user.Email).Msg("sending email to user")
+	log.Info().Str("username", user.Username).Str("email", user.Email).Msg("task processed")
 	return nil
 }

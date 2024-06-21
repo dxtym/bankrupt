@@ -13,10 +13,12 @@ import (
 	"github.com/dxtym/bankrupt/gapi"
 	"github.com/dxtym/bankrupt/pb"
 	"github.com/dxtym/bankrupt/utils"
+	"github.com/dxtym/bankrupt/worker"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/zerolog"
@@ -44,8 +46,15 @@ func main() {
 	runDbMigration(config.MigrateURL, config.Source)
 
 	store := db.NewStore(conn)
-	go runGRPCServer(config, store)
-	runGatewayServer(config, store)
+
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+
+	go runProcessor(redisOpt, store)
+	go runGRPCServer(config, store, taskDistributor)
+	runGatewayServer(config, store, taskDistributor)
 }
 
 func runDbMigration(migrateURL, source string) {
@@ -60,8 +69,16 @@ func runDbMigration(migrateURL, source string) {
 	log.Info().Msg("db migrated succesfully")
 }
 
-func runGRPCServer(config utils.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
+	rtp := worker.NewRedisTaskProcessor(redisOpt, store)
+	log.Info().Msg("starting processor")
+	if err := rtp.Run(); err != nil {
+		log.Fatal().Msgf("cannot start processor: %s", err)
+	}
+}
+
+func runGRPCServer(config utils.Config, store db.Store, td worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, td)
 	if err != nil {
 		log.Fatal().Msgf("cannot create server: %s", err)
 	}
@@ -82,8 +99,8 @@ func runGRPCServer(config utils.Config, store db.Store) {
 	}
 }
 
-func runGatewayServer(config utils.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runGatewayServer(config utils.Config, store db.Store, td worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, td)
 	if err != nil {
 		log.Fatal().Msgf("cannot create server: %s", err)
 	}
