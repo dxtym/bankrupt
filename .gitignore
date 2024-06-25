@@ -3,5 +3,3 @@ go.work.sum
 
 *.log
 */*.txt
-
-!app.env
