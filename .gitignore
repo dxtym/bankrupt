@@ -2,5 +2,6 @@ go.work
 go.work.sum
 
 *.log
-*.env
 */*.txt
+
+!app.env
