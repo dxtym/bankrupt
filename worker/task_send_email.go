@@ -28,7 +28,6 @@ func (rtd RedisTaskDistributor) DistributorTaskSendEmail(
 	}
 
 	task := asynq.NewTask(TaskSendEmail, jsonPayload, opts...) // create a new task
-
 	info, err := rtd.client.EnqueueContext(ctx, task) // enqueue the task
 	if err != nil {
 		return fmt.Errorf("failed to enqueue task: %w", err)

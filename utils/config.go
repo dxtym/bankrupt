@@ -17,6 +17,9 @@ type Config struct {
 	TokenDuration     time.Duration `mapstructure:"TOKEN_DURATION"`
 	RefreshDuration   time.Duration `mapstructure:"REFRESH_DURATION"`
 	RedisAddress      string        `mapstructure:"REDIS_ADDRESS"`
+	SenderName 	  	  string        `mapstructure:"SENDER_NAME"`
+	SenderAddress     string        `mapstructure:"SENDER_ADDRESS"`
+	SenderPassword    string        `mapstructure:"SENDER_PASSWORD"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
